@@ -10,7 +10,8 @@
         "lint",
         "compile",
         "test",
-        "@dungeon-adventure/game-api:build"
+        "@dungeon-adventure/game-api:build",
+        "dungeon_adventure.story:build"
       ]
     },
     "compile": {

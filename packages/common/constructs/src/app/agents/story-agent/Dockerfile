@@ -1,0 +1,1 @@
+FROM dungeon-adventure-story-agent:latest
