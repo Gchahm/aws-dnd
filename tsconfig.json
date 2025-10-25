@@ -8,6 +8,9 @@
     },
     {
       "path": "./packages/game-api"
+    },
+    {
+      "path": "./packages/inventory"
     }
   ]
 }
