@@ -17,7 +17,7 @@ class MetricsAspect implements IAspect {
     if (node instanceof Stack) {
       const id = 'uksb-4wk0bqpg5s';
       const version = '0.55.2';
-      const tags: string[] = ['g1', 'g9', 'g2', 'g25', 'g18'];
+      const tags: string[] = ['g1', 'g9', 'g2', 'g25', 'g18', 'g5'];
       node.templateOptions.description = `${
         node.templateOptions.description ?? ''
       } (${id}) (version:${version}) (tag:${tags.join(',')})`.trim();

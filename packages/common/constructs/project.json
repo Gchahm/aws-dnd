@@ -12,7 +12,8 @@
         "test",
         "@dungeon-adventure/game-api:build",
         "dungeon_adventure.story:build",
-        "@dungeon-adventure/inventory:build"
+        "@dungeon-adventure/inventory:build",
+        "@dungeon-adventure/game-ui:build"
       ]
     },
     "compile": {
