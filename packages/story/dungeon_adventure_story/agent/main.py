@@ -9,8 +9,7 @@ app = BedrockAgentCoreApp()
 async def invoke(payload, context):
     """Handler for agent invocation"""
     prompt = payload.get(
-        "prompt", "No prompt found in input, please guide the user "
-        "to create a json payload with prompt key"
+        "prompt", "No prompt found in input, please guide the user to create a json payload with prompt key"
     )
 
     with get_agent(session_id=context.session_id) as agent:
