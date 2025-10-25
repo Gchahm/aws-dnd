@@ -16,6 +16,14 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
-    "customConditions": ["@dungeon-adventure/source"]
+    "customConditions": ["@dungeon-adventure/source"],
+    "baseUrl": ".",
+    "rootDir": ".",
+    "paths": {
+      ":dungeon-adventure/common-constructs": [
+        "packages/common/constructs/src/index.ts"
+      ],
+      ":dungeon-adventure/game-api": ["packages/game-api/src/index.ts"]
+    }
   }
 }
