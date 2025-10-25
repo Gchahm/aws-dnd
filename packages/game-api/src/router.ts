@@ -2,14 +2,28 @@ import {
   awsLambdaRequestHandler,
   CreateAWSLambdaContextOptions,
 } from '@trpc/server/adapters/aws-lambda';
-import { echo } from './procedures/echo.js';
+import { queryActions } from './procedures/query-actions.js';
+import { saveAction } from './procedures/save-action.js';
+import { queryGames } from './procedures/query-games.js';
+import { saveGame } from './procedures/save-game.js';
+import { queryInventory } from './procedures/query-inventory.js';
 import { t } from './init.js';
 import type { APIGatewayProxyEvent } from 'aws-lambda';
 
 export const router = t.router;
 
 export const appRouter = router({
-  echo,
+  actions: router({
+    query: queryActions,
+    save: saveAction,
+  }),
+  games: router({
+    query: queryGames,
+    save: saveGame,
+  }),
+  inventory: router({
+    query: queryInventory,
+  }),
 });
 
 export const handler = awsLambdaRequestHandler({
