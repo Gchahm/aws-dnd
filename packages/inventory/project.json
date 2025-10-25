@@ -4,9 +4,12 @@
   "sourceRoot": "packages/inventory/src",
   "projectType": "library",
   "tags": [],
+  "metadata": {
+    "generator": "ts#project"
+  },
   "targets": {
     "build": {
-      "dependsOn": ["lint", "compile", "test"]
+      "dependsOn": ["lint", "compile", "test", "bundle", "docker"]
     },
     "compile": {
       "executor": "nx:run-commands",
@@ -22,9 +25,48 @@
       "options": {
         "reportsDirectory": "../../coverage/packages/inventory"
       }
+    },
+    "bundle": {
+      "cache": true,
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}/bundle"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rolldown -c rolldown.config.ts",
+        "cwd": "{projectRoot}"
+      },
+      "dependsOn": ["compile"]
+    },
+    "inventory-mcp-server-docker": {
+      "cache": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build --platform linux/arm64 -t dungeon-adventure-inventory-mcp-server:latest packages/inventory/src/mcp-server --build-context workspace=."
+      },
+      "dependsOn": ["bundle"]
+    },
+    "docker": {
+      "dependsOn": ["inventory-mcp-server-docker"]
+    },
+    "mcp-server-serve-stdio": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsx --watch ./src/mcp-server/stdio.ts"],
+        "cwd": "{projectRoot}"
+      }
+    },
+    "mcp-server-serve-http": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsx --watch ./src/mcp-server/http.ts"],
+        "cwd": "{projectRoot}"
+      }
+    },
+    "mcp-server-inspect": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["mcp-inspector -- tsx --watch ./src/mcp-server/stdio.ts"],
+        "cwd": "{projectRoot}"
+      }
     }
-  },
-  "metadata": {
-    "generator": "ts#project"
   }
 }

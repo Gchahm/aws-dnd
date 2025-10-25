@@ -1,0 +1,1 @@
+FROM dungeon-adventure-inventory-mcp-server:latest
