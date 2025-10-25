@@ -43,7 +43,11 @@ export class ElectrodbDynamoTable extends Table {
     });
 
     // Suppress checkov rules that expect a KMS customer managed key and backup to be enabled
-    suppressRules(this, ['CKV_AWS_119', 'CKV_AWS_28'], 'No need for custom encryption or backup');
+    suppressRules(
+      this,
+      ['CKV_AWS_119', 'CKV_AWS_28'],
+      'No need for custom encryption or backup',
+    );
 
     new CfnOutput(this, 'TableName', { value: this.tableName });
   }

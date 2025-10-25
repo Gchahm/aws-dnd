@@ -4,6 +4,9 @@
   "include": [],
   "references": [
     {
+      "path": "../game-api"
+    },
+    {
       "path": "./tsconfig.lib.json"
     },
     {
