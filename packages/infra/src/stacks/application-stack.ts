@@ -8,6 +8,7 @@ import {
 } from ':dungeon-adventure/common-constructs';
 import { Stack, StackProps, CfnOutput } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { ElectrodbDynamoTable } from '../constructs/electrodb-table.js';
 
 export class ApplicationStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -15,13 +16,38 @@ export class ApplicationStack extends Stack {
 
     const userIdentity = new UserIdentity(this, 'UserIdentity');
 
+    const electroDbTable = new ElectrodbDynamoTable(this, 'ElectroDbTable');
+
     const gameApi = new GameApi(this, 'GameApi', {
-      integrations: GameApi.defaultIntegrations(this).build(),
+      integrations: GameApi.defaultIntegrations(this)
+        .withDefaultOptions({
+          environment: {
+            TABLE_NAME: electroDbTable.tableName,
+          },
+        })
+        .build(),
     });
+
+    electroDbTable.grantReadData(gameApi.integrations['actions.query'].handler);
+    electroDbTable.grantReadData(gameApi.integrations['games.query'].handler);
+    electroDbTable.grantReadData(
+      gameApi.integrations['inventory.query'].handler,
+    );
+    electroDbTable.grantReadWriteData(
+      gameApi.integrations['actions.save'].handler,
+    );
+    electroDbTable.grantReadWriteData(
+      gameApi.integrations['games.save'].handler,
+    );
 
     const { userPool, userPoolClient } = userIdentity;
 
-    const mcpServer = new InventoryMcpServer(this, 'InventoryMcpServer');
+    const mcpServer = new InventoryMcpServer(this, 'InventoryMcpServer', {
+      environment: {
+        TABLE_NAME: electroDbTable.tableName,
+      },
+    });
+    electroDbTable.grantReadWriteData(mcpServer.agentCoreRuntime);
 
     // Use Cognito for user authentication with the agent
     const storyAgent = new StoryAgent(this, 'StoryAgent', {
