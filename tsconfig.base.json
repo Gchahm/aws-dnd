@@ -24,8 +24,9 @@
         "packages/common/constructs/src/index.ts"
       ],
       ":dungeon-adventure/game-api": ["packages/game-api/src/index.ts"],
+      ":dungeon-adventure/game-ui": ["packages/game-ui/src/index.ts"],
       ":dungeon-adventure/inventory": ["packages/inventory/src/index.ts"],
-      ":dungeon-adventure/game-ui": ["packages/game-ui/src/index.ts"]
+      ":dungeon-adventure/infra": ["packages/infra/src/index.ts"]
     }
   }
 }
