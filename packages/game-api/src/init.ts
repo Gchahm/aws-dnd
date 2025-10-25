@@ -1,5 +1,6 @@
 import { initTRPC } from '@trpc/server';
 import {
+  createDynamoDBPlugin,
   createErrorPlugin,
   createLoggerPlugin,
   createMetricsPlugin,
@@ -15,6 +16,7 @@ export type Context = IMiddlewareContext;
 export const t = initTRPC.context<Context>().create();
 
 export const publicProcedure = t.procedure
+  .concat(createDynamoDBPlugin())
   .concat(createLoggerPlugin())
   .concat(createTracerPlugin())
   .concat(createMetricsPlugin())
