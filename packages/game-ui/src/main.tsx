@@ -1,3 +1,5 @@
+import { useAuth } from 'react-oidc-context';
+import CognitoAuth from './components/CognitoAuth';
 import GameApiClientProvider from './components/GameApiClientProvider';
 import QueryClientProvider from './components/QueryClientProvider';
 import { useRuntimeConfig } from './hooks/useRuntimeConfig';
@@ -13,12 +15,14 @@ import { routeTree } from './routeTree.gen';
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type RouterProviderContext = {
   runtimeConfig?: ReturnType<typeof useRuntimeConfig>;
+  auth?: ReturnType<typeof useAuth>;
 };
 
 const router = createRouter({
   routeTree,
   context: {
     runtimeConfig: undefined,
+    auth: undefined,
   },
 });
 
@@ -30,8 +34,9 @@ declare module '@tanstack/react-router' {
 }
 
 const App = () => {
+  const auth = useAuth();
   const runtimeConfig = useRuntimeConfig();
-  return <RouterProvider router={router} context={{ runtimeConfig }} />;
+  return <RouterProvider router={router} context={{ runtimeConfig, auth }} />;
 };
 
 const root = document.getElementById('root');
@@ -40,11 +45,13 @@ root &&
     <React.StrictMode>
       <I18nProvider locale="en" messages={[messages]}>
         <RuntimeConfigProvider>
-          <QueryClientProvider>
-            <GameApiClientProvider>
-              <App />
-            </GameApiClientProvider>
-          </QueryClientProvider>
+          <CognitoAuth>
+            <QueryClientProvider>
+              <GameApiClientProvider>
+                <App />
+              </GameApiClientProvider>
+            </QueryClientProvider>
+          </CognitoAuth>
         </RuntimeConfigProvider>
       </I18nProvider>
     </React.StrictMode>,
