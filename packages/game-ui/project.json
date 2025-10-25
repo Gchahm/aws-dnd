@@ -4,6 +4,9 @@
   "sourceRoot": "packages/game-ui/src",
   "projectType": "application",
   "tags": [],
+  "metadata": {
+    "generator": "ts#react-website"
+  },
   "targets": {
     "build": {
       "dependsOn": ["lint", "compile", "bundle", "test"],
@@ -84,7 +87,13 @@
         "hmr": true,
         "mode": "serve-local"
       },
-      "continuous": true
+      "continuous": true,
+      "dependsOn": [
+        {
+          "projects": ["@dungeon-adventure/game-api"],
+          "target": "serve"
+        }
+      ]
     },
     "serve-static": {
       "executor": "@nx/web:file-server",
@@ -101,8 +110,5 @@
         "reportsDirectory": "../../coverage/packages/game-ui"
       }
     }
-  },
-  "metadata": {
-    "generator": "ts#react-website"
   }
 }
