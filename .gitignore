@@ -40,3 +40,6 @@ runtime-config.json
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
 /reports
+
+
+.env
