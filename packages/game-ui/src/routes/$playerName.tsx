@@ -2,13 +2,13 @@ import { PromptInput, Spinner } from '@cloudscape-design/components';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
-import { useGameApi } from '../../hooks/useGameApi';
-import { useStoryAgent } from '../../hooks/useStoryAgent';
+import { useGameApi } from '../hooks/useGameApi';
+import { useStoryAgent } from '../hooks/useStoryAgent';
 import type { IAction, IGame } from ':dungeon-adventure/game-api';
 
 type IGameState = Omit<IGame, 'lastUpdated'> & { actions: IAction[] };
 
-export const Route = createFileRoute('/game/$playerName')({
+export const Route = createFileRoute('/$playerName')({
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>) => {
     return {
