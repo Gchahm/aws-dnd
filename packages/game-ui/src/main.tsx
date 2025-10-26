@@ -12,7 +12,6 @@ import '@cloudscape-design/global-styles/index.css';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { routeTree } from './routeTree.gen';
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type RouterProviderContext = {
   runtimeConfig?: ReturnType<typeof useRuntimeConfig>;
   auth?: ReturnType<typeof useAuth>;

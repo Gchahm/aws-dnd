@@ -1,0 +1,218 @@
+import { PromptInput, Spinner } from '@cloudscape-design/components';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { createFileRoute } from '@tanstack/react-router';
+import { useEffect, useRef, useState } from 'react';
+import { useGameApi } from '../../hooks/useGameApi';
+import { useStoryAgent } from '../../hooks/useStoryAgent';
+import type { IAction, IGame } from ':dungeon-adventure/game-api';
+
+type IGameState = Omit<IGame, 'lastUpdated'> & { actions: IAction[] };
+
+export const Route = createFileRoute('/game/$playerName')({
+  component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      genre: search.genre as IGameState['genre'],
+    };
+  },
+});
+
+function RouteComponent() {
+  const { playerName } = Route.useParams();
+  const { genre } = Route.useSearch();
+
+  const [currentInput, setCurrentInput] = useState('');
+  const [streamingContent, setStreamingContent] = useState('');
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Get genre-specific icon for assistant messages
+  const getAssistantIcon = () => {
+    switch (genre) {
+      case 'zombie':
+        return '🧟';
+      case 'superhero':
+        return '🦸';
+      case 'medieval':
+        return '⚔️';
+      default:
+        return '📖';
+    }
+  };
+
+  const gameApi = useGameApi();
+  const storyAgent = useStoryAgent();
+  const saveActionMutation = useMutation(
+    gameApi.actions.save.mutationOptions(),
+  );
+  const gameActionsQuery = useQuery(
+    gameApi.actions.query.queryOptions({ playerName, limit: 100 }),
+  );
+  const inventoryQuery = useQuery(
+    gameApi.inventory.query.queryOptions({ playerName, limit: 100 }),
+  );
+
+  // no actions - therefore must be a new game - generate initial story
+  useEffect(() => {
+    if (
+      !gameActionsQuery.isLoading &&
+      gameActionsQuery.data?.items &&
+      gameActionsQuery.data?.items.length === 0
+    ) {
+      generateStory({
+        playerName,
+        genre,
+        actions: [],
+      });
+    }
+  }, [gameActionsQuery.data?.items, gameActionsQuery.isLoading]);
+
+  const generateStoryMutation = useMutation({
+    mutationFn: async ({ playerName, genre, actions }: IGameState) => {
+      let content = '';
+      for await (const chunk of storyAgent.generateStory({
+        playerName,
+        genre,
+        actions,
+      })) {
+        content += chunk;
+        // make chunks available to render in a streaming fashion
+        setStreamingContent(content);
+      }
+
+      return content;
+    },
+  });
+
+  // scroll to the last message
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // scroll to the bottom whenever gameActionsQuery is fetched or whenever streaming content changes
+  useEffect(() => {
+    scrollToBottom();
+  }, [streamingContent, gameActionsQuery]);
+
+  // progress the story
+  const generateStory = async ({ playerName, genre, actions }: IGameState) => {
+    try {
+      const content = await generateStoryMutation.mutateAsync({
+        playerName,
+        genre,
+        actions,
+      });
+
+      // Save assistant's response
+      await saveActionMutation.mutateAsync({
+        playerName,
+        role: 'assistant',
+        content,
+      });
+
+      await gameActionsQuery.refetch();
+      setStreamingContent('');
+
+      await inventoryQuery.refetch();
+    } catch (error) {
+      console.error('Failed to generate story:', error);
+    }
+  };
+
+  // progress the story when the user submits input
+  const handleSubmitAction = async () => {
+    if (!currentInput.trim()) return;
+
+    const userAction: IAction = {
+      playerName,
+      role: 'user' as const,
+      content: currentInput,
+      timestamp: new Date().toISOString(),
+    };
+
+    // Save user action
+    await saveActionMutation.mutateAsync(userAction);
+    await gameActionsQuery.refetch();
+
+    setCurrentInput('');
+
+    // Generate response
+    await generateStory({
+      genre,
+      playerName,
+      actions: [...(gameActionsQuery.data?.items ?? []), userAction],
+    });
+  };
+
+  return (
+    <div className="game-interface">
+      {inventoryQuery.data?.items && inventoryQuery.data.items.length > 0 && (
+        <div className="inventory-overlay">
+          <div className="inventory-header">
+            📦 Inventory{' '}
+            {inventoryQuery.isFetching ? (
+              <Spinner data-style="generating" size="normal" />
+            ) : null}
+          </div>
+          <div className="inventory-items">
+            {inventoryQuery.data.items.map((item, idx) => (
+              <div key={idx} className="inventory-item">
+                {item.emoji ?? null} {item.itemName}{' '}
+                {item.quantity > 1 && `(x${item.quantity})`}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="messages-area">
+        <div className="messages-container">
+          {gameActionsQuery.data?.items
+            .concat(
+              streamingContent.length > 0
+                ? [
+                    {
+                      playerName,
+                      role: 'assistant',
+                      content: streamingContent,
+                      timestamp: new Date().toISOString(),
+                    },
+                  ]
+                : [],
+            )
+            .map((action, i) => (
+              <div key={i}>
+                <div
+                  className={`message ${
+                    action.role === 'assistant' ? 'assistant' : 'user'
+                  }`}
+                >
+                  <div className="message-header">
+                    {action.role === 'assistant'
+                      ? `${getAssistantIcon()} Story`
+                      : `⭐️ ${playerName}`}
+                  </div>
+                  <div className="message-content">{action.content}</div>
+                </div>
+              </div>
+            ))}
+          {generateStoryMutation.isPending && streamingContent.length === 0 && (
+            <Spinner data-style="generating" size="big" />
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
+      <div className="input-area">
+        <PromptInput
+          onChange={({ detail }) => setCurrentInput(detail.value)}
+          value={currentInput}
+          actionButtonAriaLabel="Send message"
+          actionButtonIconName="send"
+          ariaLabel="Default prompt input"
+          placeholder="What do you do?"
+          onAction={handleSubmitAction}
+        />
+      </div>
+    </div>
+  );
+}
