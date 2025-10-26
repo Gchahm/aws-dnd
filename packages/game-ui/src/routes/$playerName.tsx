@@ -192,7 +192,13 @@ function RouteComponent() {
                       ? `${getAssistantIcon()} Story`
                       : `⭐️ ${playerName}`}
                   </div>
-                  <div className="message-content">{action.content}</div>
+                  <div className="message-content">
+                    {i === gameActionsQuery.data?.items.length &&
+                      generateStoryMutation.isPending && (
+                        <Spinner data-style="generating-chat" size="big" />
+                      )}
+                    {action.content}
+                  </div>
                 </div>
               </div>
             ))}
@@ -206,6 +212,11 @@ function RouteComponent() {
         <PromptInput
           onChange={({ detail }) => setCurrentInput(detail.value)}
           value={currentInput}
+          disabled={
+            saveActionMutation.isPending ||
+            gameActionsQuery.isFetching ||
+            generateStoryMutation.isPending
+          }
           actionButtonAriaLabel="Send message"
           actionButtonIconName="send"
           ariaLabel="Default prompt input"

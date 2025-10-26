@@ -118,6 +118,10 @@ span[data-style='generating'] {
   color: rgba(252, 214, 112, 1) !important;
 }
 
+span[data-style='generating-chat'] {
+  color: rgb(55, 102, 27) !important;
+}
+
 .name-input,
 .action-input {
   width: 100%;
