@@ -1,23 +1,31 @@
+import os
+
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 
 from .agent import get_agent
 
 app = BedrockAgentCoreApp()
 
+PORT = int(os.environ.get("PORT", "8080"))
+
 
 @app.entrypoint
 async def invoke(payload, context):
     """Handler for agent invocation"""
-    prompt = payload.get(
-        "prompt", "No prompt found in input, please guide the user to create a json payload with prompt key"
-    )
+    player_name = payload.get("playerName")
+    genre = payload.get("genre")
+    actions = payload.get("actions")
 
-    with get_agent(session_id=context.session_id) as agent:
-        stream = agent.stream_async(prompt)
+    messages = [{"role": "user", "content": [{"text": "Continue or create a new story..."}]}]
+    for action in actions:
+        messages.append({"role": action["role"], "content": [{"text": action["content"]}]})
+
+    with get_agent(player_name, genre, session_id=context.session_id) as agent:
+        stream = agent.stream_async(messages)
         async for event in stream:
             print(event)
             yield (event)
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(port=PORT)
